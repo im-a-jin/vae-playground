@@ -6,6 +6,9 @@ references:
     https://github.com/matthew-liu/beta-vae/blob/master/models.py
     https://github.com/1Konny/Beta-VAE/blob/master/model.py
 """
+import torch
+from torch import nn
+from torch.nn import functional as F
 
 class BetaVAE(nn.Module):
     def __init__(self, in_dim=64, in_channels=1, latent_dim=20, hidden_dims=None, beta=1, gamma=1000, capacity=25, stop_iter=100):
@@ -99,8 +102,10 @@ class BetaVAE(nn.Module):
 
     def c_loss(self, output, input, mu, logvar, iter):
         D_kl = -0.5 * torch.sum(1 + logvar - mu.square() - logvar.exp())
-        C = torch.clamp(iter/self.stop_iter*self.capacity, 0, self.capacity)
-        loss = F.binary_cross_entropy(output, input, reduction='sum') + 
+        C = torch.Tensor([capacity]).to(input.device)
+        C = torch.clamp(iter/self.stop_iter*C, 0, self.capacity)
+        loss = F.binary_cross_entropy(output, input, reduction='sum') + self.gamma * (D_kl - C).abs()
+        return loss / input.shape[0]
 
     def sample(self, num_samples):
         z = torch.randn(num_samples, self.latent_dim)

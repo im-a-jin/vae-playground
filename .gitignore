@@ -130,3 +130,6 @@ dmypy.json
 
 # Vim files
 *.swp
+
+# MacOS files
+.DS_store

@@ -5,7 +5,6 @@ references:
     https://github.com/AntixK/PyTorch-VAE/blob/master/models/vanilla_vae.py
     https://github.com/ttchengab/VAE/blob/main/VAE.py
 """
-import math
 import torch
 from torch import nn
 from torch.nn import functional as F
