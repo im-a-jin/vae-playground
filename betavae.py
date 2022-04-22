@@ -96,16 +96,14 @@ class BetaVAE(nn.Module):
         return output, z, mu, logvar
 
     def b_loss(self, output, input, mu, logvar):
-        D_kl = -0.5 * torch.sum(1 + logvar - mu.square() - logvar.exp())
-        loss = F.binary_cross_entropy(output, input, reduction='sum') + self.beta * D_kl
-        return loss / input.shape[0]
+        D_kl = torch.mean(-0.5 * torch.sum(1 + logvar - mu.square() - logvar.exp(), dim=1), dim=0)
+        return F.binary_cross_entropy(output, input) + self.beta * D_kl
 
     def c_loss(self, output, input, mu, logvar, iter):
-        D_kl = -0.5 * torch.sum(1 + logvar - mu.square() - logvar.exp())
-        C = torch.Tensor([capacity]).to(input.device)
+        D_kl = torch.mean(-0.5 * torch.sum(1 + logvar - mu.square() - logvar.exp(), dim=1), dim=0)
+        C = torch.Tensor([self.capacity]).to(input.device)
         C = torch.clamp(iter/self.stop_iter*C, 0, self.capacity)
-        loss = F.binary_cross_entropy(output, input, reduction='sum') + self.gamma * (D_kl - C).abs()
-        return loss / input.shape[0]
+        return F.binary_cross_entropy(output, input) + self.gamma * (D_kl - C).abs()
 
     def sample(self, num_samples):
         z = torch.randn(num_samples, self.latent_dim)
